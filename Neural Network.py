@@ -9,6 +9,11 @@ def sigmoid(net):
     return 1 / (1 + np.exp(-net))
 
 
+def sigmoid_prime(s):
+    # derivative of sigmoid
+    return s * (1 - s)
+
+
 class NeuralNetwork:
     def __init__(self, m, l, n, input_vector):
         self.hidden_weights = np.random.rand(m, l) * 10 + (-5)  # m*L
@@ -22,6 +27,32 @@ class NeuralNetwork:
         self.hidden_layers = sigmoid(np.dot(self.input_layers, self.hidden_weights))  # (k*m).(m*L)
         output_layers = sigmoid(np.dot(self.hidden_layers, self.output_weights))  # (k*L).(L*n)
         return output_layers  # return the normalized output
+
+    def backward(self, x_train, y_actual, y_predict, num_of_iterations, threshold):
+        for x in range(num_of_iterations):
+
+            error = calculate_mse(y_actual - y_predict)
+
+            if any(error > threshold):
+
+                o_error = y_actual - y_predict  # error in output
+
+                # how much our hidden layer weights contributed to output error
+                # applying derivative of sigmoid to hidden_layer_output_error
+                # update hidden weights (input --> hidden) weights
+                hidden_layer_output_error = o_error.dot(self.output_weights.T)
+                apply_derivative_sigmoid = sigmoid_prime(self.hidden_layers) * hidden_layer_output_error
+                self.hidden_weights += (self.learning_rate * x_train.T.dot(apply_derivative_sigmoid))
+
+                # update output weights (hidden --> output) weights
+                self.output_weights += (self.learning_rate * self.hidden_layers.T.dot(o_error))
+
+            else:
+                break
+
+    def train(self, x_train, y_actual, num_of_iterations, threshold):
+        y_predict = self.feed_forward()
+        self.backward(x_train, y_actual, y_predict, num_of_iterations, threshold)
 
 
 def take_input():
@@ -52,6 +83,11 @@ def __main__():
 
     y_predict = NN.feed_forward()
     print("Before back propagation", calculate_mse(y_actual - y_predict))
+
+    NN.train(x_input, y_actual, 500, 0.1)
+
+    y_predict = NN.feed_forward()
+    print("After back propagation", calculate_mse(y_actual - y_predict))
 
 
 __main__()
