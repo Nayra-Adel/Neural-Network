@@ -1,4 +1,5 @@
 import numpy as np
+import pickle
 
 
 def calculate_mse(delta):
@@ -88,6 +89,9 @@ def __main__():
 
     y_predict = NN.feed_forward()
     print("After back propagation", calculate_mse(y_actual - y_predict))
+
+    # save the weights
+    pickle.dump([NN.hidden_weights, NN.output_weights], open("weights", 'wb'))
 
 
 __main__()
